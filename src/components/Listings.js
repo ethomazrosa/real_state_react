@@ -1,16 +1,15 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import Axios from 'axios';
 
 // Leaflet
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Icon } from 'leaflet';
 //  MUI
-import { Grid, AppBar, Typography, Button, Card, CardHeader, CardMedia, CardContent } from '@mui/material';
+import { Grid, AppBar, Typography, Button, Card, CardHeader, CardMedia, CardContent, CircularProgress } from '@mui/material';
 // Map icons
 import houseIconPng from '../assets/Mapicons/house.png';
 import apartmentIconPng from '../assets/Mapicons/apartment.png';
 import officeIconPng from '../assets/Mapicons/office.png';
-// Assets
-import myListings from '../assets/Data/Dummydata'
 
 function Listings() {
 
@@ -18,19 +17,39 @@ function Listings() {
   const apartmentIcon = new Icon({ iconUrl: apartmentIconPng, iconSize: [40, 40] })
   const officeIcon = new Icon({ iconUrl: officeIconPng, iconSize: [40, 40] })
 
-  // const [latitude, setLatitude] = useState(51.505)
-  // const [longitude, setLongitude] = useState(-0.09)
+  const [allListings, setAllListings] = useState([])
+  const [dataIsLoading, setDataIsLoading] = useState(true)
 
-  const polyOne = [
-    [51.505, -0.09],
-    [51.51, -0.1],
-    [51.51, -0.12],
-  ]
+  useEffect(() => {
+    const source = Axios.CancelToken.source()
+    async function GetAllListings() {
+      try {
+        const response = await Axios.get('http://127.0.0.1:8000/api/listings/', { cancelToken: source.token })
+        setAllListings(response.data)
+        setDataIsLoading(false)
+      } catch (error) {
+        console.log(error.response)
+      }
+    }
+
+    GetAllListings()
+    return (() => {
+      source.cancel()
+    })
+  }, [])
+
+  if (dataIsLoading) {
+    return (
+      <Grid container justifyContent="center" alignItems="center" style={{ height: '100vh' }}>
+        <CircularProgress />
+      </Grid>
+    )
+  }
 
   return (
     <Grid container>
       <Grid item xs={4}>
-        {myListings.map((listing) => {
+        {allListings.map((listing) => {
           return (
             <Card key={listing.id} style={{ margin: '0.5rem', paddingRight: '1rem', paddingLeft: '1rem', position: 'relative' }}>
               <CardHeader
@@ -45,7 +64,11 @@ function Listings() {
                 component="img"
                 image={listing.picture1}
                 alt={listing.title}
-                style={{ borderRadius: '5px' }}
+                style={{
+                  borderRadius: '5px',
+                  height: "20rem",
+                  objectFit: 'cover',
+                }}
               />
               <CardContent>
                 <Typography variant="body2">
@@ -86,9 +109,7 @@ function Listings() {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
 
-              <Polyline positions={polyOne} weight={10} color="green" />
-
-              {myListings.map((listing) => {
+              {allListings.map((listing) => {
                 function IconDisplay() {
                   if (listing.listing_type === 'House') {
                     return houseIcon
