@@ -9,6 +9,7 @@ import Login from './components/Login';
 import Listings from './components/Listings';
 import Header from './components/Header';
 import Register from './components/Register';
+import AddProperty from './components/AddProperty';
 
 // Contexts
 import DispatchContext from './contexts/DispatchContext';
@@ -37,6 +38,7 @@ function App() {
         break
       case 'usersSignsOut':
         draft.userIsLogged = false
+        break
       default:
         break
     }
@@ -67,6 +69,7 @@ function App() {
             <Route path='/' element={<Home />} />
             <Route path='login/' element={<Login />} />
             <Route path='register/' element={<Register />} />
+            <Route path='property/' element={<AddProperty />} />
             <Route path='listings/' element={<Listings />} />
           </Routes>
         </BrowserRouter>

@@ -75,7 +75,7 @@ function Register() {
 
     return (
         <div>
-            <Card sx={{ width: '50%', marginLeft: 'auto', marginRight: 'auto', marginTop: '3rem', padding: '2rem' }}>
+            <Card elevation={10} sx={{ width: '50%', marginLeft: 'auto', marginRight: 'auto', marginTop: '3rem', padding: '2rem' }}>
                 <Box component="form" onSubmit={FormSubmit}>
                     <Grid container rowSpacing={1}>
                         <Grid item xs={12}>

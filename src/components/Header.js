@@ -63,7 +63,12 @@ function Header() {
                             </Button>
                         </div>
                         <div style={{ marginLeft: "auto" }}>
-                            <Button style={{ marginRight: "1rem" }} variant="contained" color="success" size="large" onClick={() => navigate('/')}>
+                            <Button
+                                style={{ marginRight: "1rem" }}
+                                variant="contained"
+                                color="success"
+                                size="large"
+                                onClick={() => navigate('property/')}>
                                 Add Property
                             </Button>
 

@@ -51,7 +51,7 @@ function Listings() {
       <Grid item xs={4}>
         {allListings.map((listing) => {
           return (
-            <Card key={listing.id} style={{ margin: '0.5rem', paddingRight: '1rem', paddingLeft: '1rem', position: 'relative' }}>
+            <Card elevation={10} key={listing.id} style={{ margin: '0.5rem', paddingRight: '1rem', paddingLeft: '1rem', position: 'relative' }}>
               <CardHeader
                 // action={
                 //   <IconButton aria-label="settings">
@@ -122,7 +122,7 @@ function Listings() {
                 return (
                   <Marker
                     key={listing.id}
-                    position={[listing.location.coordinates[0], listing.location.coordinates[1]]}
+                    position={[listing.latitude, listing.longitude]}
                     icon={IconDisplay()}>
                     <Popup>
                       <Typography variant="h5">{listing.title}</Typography>
