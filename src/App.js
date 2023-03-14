@@ -1,19 +1,22 @@
-import './App.css';
+import './App.css'
 import React, { useEffect } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { useImmerReducer } from 'use-immer'
 
 // Components
-import Home from './components/Home';
-import Login from './components/Login';
-import Listings from './components/Listings';
-import Header from './components/Header';
-import Register from './components/Register';
-import AddProperty from './components/AddProperty';
+import Home from './components/Home'
+import Login from './components/Login'
+import Listings from './components/Listings'
+import Header from './components/Header'
+import Register from './components/Register'
+import AddProperty from './components/AddProperty'
+import Profile from './components/Profile'
+import Agencies from './components/Agencies'
+import AgencyDetail from './components/AgencyDetail'
 
 // Contexts
-import DispatchContext from './contexts/DispatchContext';
-import StateContext from './contexts/StateContext';
+import DispatchContext from './contexts/DispatchContext'
+import StateContext from './contexts/StateContext'
 
 function App() {
 
@@ -70,12 +73,15 @@ function App() {
             <Route path='login/' element={<Login />} />
             <Route path='register/' element={<Register />} />
             <Route path='property/' element={<AddProperty />} />
+            <Route path='profile/' element={<Profile />} />
+            <Route path='agencies/' element={<Agencies />} />
+            <Route path='agencies/:id' element={<AgencyDetail />} />
             <Route path='listings/' element={<Listings />} />
           </Routes>
         </BrowserRouter>
       </DispatchContext.Provider>
     </StateContext.Provider>
-  );
+  )
 }
 
-export default App;
+export default App

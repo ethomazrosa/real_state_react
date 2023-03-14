@@ -20,9 +20,16 @@ function Header() {
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget)
     }
+
     const handleClose = () => {
         setAnchorEl(null)
     }
+
+    const handleProfile = () => {
+        setAnchorEl(null)
+        navigate('/profile')
+    }
+
     async function handleLogout() {
         setAnchorEl(null)
         const confirmLogout = window.confirm('Are you sure you want to logout?')
@@ -35,7 +42,6 @@ function Header() {
                         headers: { Authorization: 'Token '.concat(GlobalState.userToken) }
                     },
                 )
-                console.log(response)
                 GlobalDispatch({ type: 'usersSignsOut' })
                 navigate('/')
             } catch (error) {
@@ -58,7 +64,7 @@ function Header() {
                             <Button style={{ marginRight: "1rem" }} color="inherit" onClick={() => navigate('listings/')}>
                                 <Typography variant="h6">Listings</Typography>
                             </Button>
-                            <Button style={{ marginLeft: "1rem" }} color="inherit" onClick={() => navigate('/')}>
+                            <Button style={{ marginLeft: "1rem" }} color="inherit" onClick={() => navigate('agencies/')}>
                                 <Typography variant="h6">Agencies</Typography>
                             </Button>
                         </div>
@@ -99,7 +105,7 @@ function Header() {
                                     'aria-labelledby': 'basic-button',
                                 }}
                             >
-                                <MenuItem style={{ width: '9.6rem' }} onClick={handleClose}>Profile</MenuItem>
+                                <MenuItem style={{ width: '9.6rem' }} onClick={handleProfile}>Profile</MenuItem>
                                 <MenuItem onClick={handleLogout}>Logout</MenuItem>
                             </Menu>
                         </div>

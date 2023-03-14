@@ -1,12 +1,16 @@
-import React, { useEffect, useRef, useMemo } from 'react'
+import React, { useEffect, useRef, useMemo, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useImmerReducer } from 'use-immer'
+import Axios from 'axios'
 
 // React Leaflet
 import { MapContainer, TileLayer, Marker, useMap, Polygon, } from 'react-leaflet'
 
 //  MUI
 import { Box, TextField, Grid, Card, Typography, Button, FormControlLabel, Checkbox } from '@mui/material'
+
+// Contexts
+import StateContext from '../contexts/StateContext'
 
 // Boroughs
 import Camden from '../assets/Boroughs/Camden';
@@ -115,7 +119,7 @@ const innerLondonOptions = [
         value: 'City of London',
         label: 'City of London',
     },
-];
+]
 
 const outterLondonOptions = [
     {
@@ -202,11 +206,65 @@ const outterLondonOptions = [
         value: 'Waltham Forest',
         label: 'Waltham Forest',
     },
-];
+]
+
+const listingTypeOptions = [
+    {
+        value: '',
+        label: '',
+    },
+    {
+        value: 'Apartment',
+        label: 'Apartment',
+    },
+    {
+        value: 'House',
+        label: 'House',
+    },
+    {
+        value: 'Office',
+        label: 'Office',
+    },
+]
+
+const propertyStatusOptions = [
+    {
+        value: '',
+        label: '',
+    },
+    {
+        value: 'Sale',
+        label: 'Sale',
+    },
+    {
+        value: 'Rent',
+        label: 'Rent',
+    },
+]
+
+const rentalFrequencyOptions = [
+    {
+        value: '',
+        label: '',
+    },
+    {
+        value: 'Month',
+        label: 'Month',
+    },
+    {
+        value: 'Week',
+        label: 'Week',
+    },
+    {
+        value: 'Day',
+        label: 'Day',
+    },
+]
 
 function AddProperty() {
 
-    const navigate = useNavigate();
+    const navigate = useNavigate()
+    const GlobalState = useContext(StateContext)
 
     const initialState = {
         titleValue: '',
@@ -343,6 +401,16 @@ function AddProperty() {
                 draft.latitudeValue = '';
                 draft.longitudeValue = '';
                 break;
+            case 'catchUploadedPictures':
+                draft.uploadedPictures = action.picturesChosen
+                break
+            case 'changeSendRequest':
+                draft.sendRequest = draft.sendRequest + 1
+                break
+            case 'catchUserProfileInfo':
+                draft.userProfile.agencyName = action.profileObject.agencyName
+                draft.userProfile.phoneNumber = action.profileObject.phoneNumber
+                break
             default:
                 break
         }
@@ -372,7 +440,52 @@ function AddProperty() {
             },
         }),
         []
-    );
+    )
+
+    useEffect(() => {
+        if (state.uploadedPictures[0]) {
+            dispatch({
+                type: 'catchPicture1Change',
+                picture1Chosen: state.uploadedPictures[0],
+            })
+        }
+    }, [state.uploadedPictures[0]])
+
+    useEffect(() => {
+        if (state.uploadedPictures[1]) {
+            dispatch({
+                type: 'catchPicture2Change',
+                picture2Chosen: state.uploadedPictures[1],
+            })
+        }
+    }, [state.uploadedPictures[1]])
+
+    useEffect(() => {
+        if (state.uploadedPictures[2]) {
+            dispatch({
+                type: 'catchPicture3Change',
+                picture3Chosen: state.uploadedPictures[2],
+            })
+        }
+    }, [state.uploadedPictures[2]])
+
+    useEffect(() => {
+        if (state.uploadedPictures[3]) {
+            dispatch({
+                type: 'catchPicture4Change',
+                picture4Chosen: state.uploadedPictures[3],
+            })
+        }
+    }, [state.uploadedPictures[3]])
+
+    useEffect(() => {
+        if (state.uploadedPictures[4]) {
+            dispatch({
+                type: 'catchPicture5Change',
+                picture5Chosen: state.uploadedPictures[4],
+            })
+        }
+    }, [state.uploadedPictures[4]])
 
     useEffect(() => {
         if (state.boroughValue === 'Camden') {
@@ -679,22 +792,114 @@ function AddProperty() {
         }
     }
 
+    function PriceDisplay() {
+        if (state.propertyStatusValue === 'Rent' && state.rentalFrequencyValue !== '') {
+            return 'Price per ' + state.rentalFrequencyValue + '*'
+        } else {
+            return 'Price*'
+        }
+    }
+
+    function SubmitButtonDisplay() {
+        if (GlobalState.userIsLogged &&
+            state.userProfile.agencyName !== null &&
+            state.userProfile.agencyName !== '' &&
+            state.userProfile.phoneNumber !== null &&
+            state.userProfile.phoneNumber !== '') {
+            return (
+                <Grid item xs={8}>
+                    <Button variant="contained" color="success" fullWidth type="submit">SUBMIT</Button>
+                </Grid>
+            )
+        } else if (GlobalState.userIsLogged &&
+            (state.userProfile.agencyName === null ||
+                state.userProfile.agencyName === '' ||
+                state.userProfile.phoneNumber === null ||
+                state.userProfile.phoneNumber === '')) {
+            return (
+                <Grid item xs={8}>
+                    <Button variant="outlined" color="success" fullWidth onClick={() => navigate('/profile')}>COMPLETE YOU PROFILE TO ADD A PROPERTY</Button>
+                </Grid>
+            )
+        } else if (!GlobalState.userIsLogged) {
+            return (
+                <Grid item xs={8}>
+                    <Button variant="outlined" color="success" fullWidth onClick={() => navigate('/login')}>SIGN IN TO ADD A PROPERTY</Button>
+                </Grid>
+            )
+        }
+    }
+
+    useEffect(() => {
+        async function GetProfileInfo() {
+            try {
+                const response = await Axios.get(
+                    `http://localhost:8000/api/profiles/${GlobalState.userId}/`
+                )
+                dispatch({ type: 'catchUserProfileInfo', profileObject: response.data })
+            } catch (e) {
+                console.log(e.response)
+            }
+        }
+        GetProfileInfo()
+    }, [])
+
     function FormSubmit(e) {
         e.preventDefault()
-        // dispatch({ type: 'changeSendRequest' })
+        dispatch({ type: 'changeSendRequest' })
     }
+
+    useEffect(() => {
+        if (state.sendRequest) {
+            async function AddProperty() {
+                const formData = new FormData()
+                formData.append("title", state.titleValue)
+                formData.append("description", state.descriptionValue)
+                formData.append("area", state.areaValue)
+                formData.append("borough", state.boroughValue)
+                formData.append("listing_type", state.listingTypeValue)
+                formData.append("property_status", state.propertyStatusValue)
+                formData.append("price", state.priceValue)
+                formData.append("rental_frequency", state.rentalFrequencyValue)
+                formData.append("rooms", state.roomsValue)
+                formData.append("furnished", state.furnishedValue)
+                formData.append("pool", state.poolValue)
+                formData.append("elevator", state.elevatorValue)
+                formData.append("cctv", state.cctvValue)
+                formData.append("parking", state.parkingValue)
+                formData.append("latitude", state.latitudeValue)
+                formData.append("longitude", state.longitudeValue)
+                formData.append("picture1", state.picture1Value)
+                formData.append("picture2", state.picture2Value)
+                formData.append("picture3", state.picture3Value)
+                formData.append("picture4", state.picture4Value)
+                formData.append("picture5", state.picture5Value)
+                formData.append("seller", GlobalState.userId)
+                try {
+                    const response = await Axios.post(
+                        'http://127.0.0.1:8000/api/listings/create',
+                        formData
+                    )
+                    navigate('/listings')
+                } catch (e) {
+                    console.log(e.response)
+                }
+            }
+            AddProperty()
+        }
+    }, [state.sendRequest])
 
     return (
         <Card elevation={10} sx={{ width: '75%', marginLeft: 'auto', marginRight: 'auto', marginTop: '3rem', padding: '2rem' }}>
             <Box component="form" onSubmit={FormSubmit}>
-                <Grid container rowSpacing={1}>
+                <Grid container rowSpacing={2} columnSpacing={{ xs: 1, sm: 2, md: 4, lg: 8, xl: 16 }}>
                     <Grid item xs={12}>
                         <Typography variant="h4" sx={{ textAlign: 'center' }}>SUBMIT A PROPERTY</Typography>
                     </Grid>
                     <Grid item xs={12}>
                         <TextField
                             id="title"
-                            label="Title"
+                            label="Title*"
                             variant="standard"
                             fullWidth
                             margin="dense"
@@ -706,12 +911,16 @@ function AddProperty() {
                                 })}
                         />
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid item xs={12} md={6}>
                         <TextField
                             id="listingType"
-                            label="Listing Type"
+                            label="Listing Type*"
                             variant="standard"
                             fullWidth
+                            select
+                            SelectProps={{
+                                native: true,
+                            }}
                             margin="dense"
                             value={state.listingTypeValue}
                             onChange={(e) =>
@@ -719,42 +928,70 @@ function AddProperty() {
                                     type: 'catchListingTypeChange',
                                     listingTypeChosen: e.target.value,
                                 })}
-                        />
+                        >
+                            {listingTypeOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </TextField>
                     </Grid>
-                    <Grid item xs={12}>
-                        <TextField
-                            id="description"
-                            label="Description"
-                            variant="standard"
-                            fullWidth
-                            margin="dense"
-                            value={state.descriptionValue}
-                            onChange={(e) =>
-                                dispatch({
-                                    type: 'catchDescriptionChange',
-                                    descriptionChosen: e.target.value,
-                                })}
-                        />
-                    </Grid>
-                    <Grid item xs={12}>
+                    <Grid item xs={12} md={6}>
                         <TextField
                             id="propertyStatus"
-                            label="Property Status"
+                            label="Property Status*"
                             variant="standard"
                             fullWidth
                             margin="dense"
+                            select
+                            SelectProps={{
+                                native: true,
+                            }}
                             value={state.propertyStatusValue}
                             onChange={(e) =>
                                 dispatch({
                                     type: 'catchPropertyStatusChange',
                                     propertyStatusChosen: e.target.value,
                                 })}
-                        />
+                        >
+                            {propertyStatusOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </TextField>
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid item xs={12} md={6}>
+                        <TextField
+                            id="rentalFrequency"
+                            label="Rental Frequency"
+                            variant="standard"
+                            disabled={state.propertyStatusValue === 'Sale' ? true : false}
+                            fullWidth
+                            margin="dense"
+                            select
+                            SelectProps={{
+                                native: true,
+                            }}
+                            value={state.rentalFrequencyValue}
+                            onChange={(e) =>
+                                dispatch({
+                                    type: 'catchRentalFrequencyChange',
+                                    rentalFrequencyChosen: e.target.value,
+                                })}
+                        >
+                            {rentalFrequencyOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </TextField>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
                         <TextField
                             id="price"
-                            label="Price"
+                            type="number"
+                            label={PriceDisplay()}
                             variant="standard"
                             fullWidth
                             margin="dense"
@@ -768,145 +1005,152 @@ function AddProperty() {
                     </Grid>
                     <Grid item xs={12}>
                         <TextField
-                            id="rentalFrequency"
-                            label="Rental Frequency"
-                            variant="standard"
+                            id="description"
+                            label="Description"
+                            variant="outlined"
+                            multiline
+                            rows={6}
                             fullWidth
                             margin="dense"
-                            value={state.rentalFrequencyValue}
+                            value={state.descriptionValue}
                             onChange={(e) =>
                                 dispatch({
-                                    type: 'catchRentalFrequencyChange',
-                                    rentalFrequencyChosen: e.target.value,
+                                    type: 'catchDescriptionChange',
+                                    descriptionChosen: e.target.value,
                                 })}
                         />
                     </Grid>
-                    <Grid item xs={12}>
+                    {state.listingTypeValue === 'Office' ? '' : (
+                        <Grid item xs={3}>
+                            <TextField
+                                id="rooms"
+                                type="number"
+                                label="Rooms"
+                                variant="standard"
+                                fullWidth
+                                margin="dense"
+                                value={state.roomsValue}
+                                onChange={(e) =>
+                                    dispatch({
+                                        type: 'catchRoomsChange',
+                                        roomsChosen: e.target.value,
+                                    })}
+                            />
+                        </Grid>
+                    )}
+
+                    <Grid container item justifyContent="space-between">
+                        <Grid item xs={6} sm={4} md={2}>
+                            <FormControlLabel
+                                control={<Checkbox
+                                    checked={state.furnishedValue}
+                                    onChange={(e) =>
+                                        dispatch({
+                                            type: 'catchFurnishedChange',
+                                            furnishedChosen: e.target.checked,
+                                        })} />}
+                                label="Furnished" />
+                        </Grid>
+                        <Grid item xs={6} sm={4} md={2}>
+                            <FormControlLabel
+                                control={<Checkbox
+                                    checked={state.poolValue}
+                                    onChange={(e) =>
+                                        dispatch({
+                                            type: 'catchPoolChange',
+                                            poolChosen: e.target.checked,
+                                        })} />}
+                                label="Pool" />
+                        </Grid>
+                        <Grid item xs={6} sm={4} md={2}>
+                            <FormControlLabel
+                                control={<Checkbox
+                                    checked={state.elevatorValue}
+                                    onChange={(e) =>
+                                        dispatch({
+                                            type: 'catchElevatorChange',
+                                            elevatorChosen: e.target.checked,
+                                        })} />}
+                                label="Elevator" />
+                        </Grid>
+                        <Grid item xs={6} sm={4} md={2}>
+                            <FormControlLabel
+                                control={<Checkbox
+                                    checked={state.cctvValue}
+                                    onChange={(e) =>
+                                        dispatch({
+                                            type: 'catchCctvChange',
+                                            cctvChosen: e.target.checked,
+                                        })} />}
+                                label="Cctv" />
+                        </Grid>
+                        <Grid item xs={6} sm={4} md={2}>
+                            <FormControlLabel
+                                control={<Checkbox
+                                    checked={state.parkingValue}
+                                    onChange={(e) =>
+                                        dispatch({
+                                            type: 'catchParkingChange',
+                                            parkingChosen: e.target.checked,
+                                        })} />}
+                                label="Parking" />
+                        </Grid>
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
                         <TextField
-                            id="rooms"
-                            label="Rooms"
+                            id="area"
+                            label="Area*"
                             variant="standard"
                             fullWidth
+                            select
+                            SelectProps={{
+                                native: true,
+                            }}
                             margin="dense"
-                            value={state.roomsValue}
+                            value={state.areaValue}
                             onChange={(e) =>
                                 dispatch({
-                                    type: 'catchRoomsChange',
-                                    roomsChosen: e.target.value,
+                                    type: 'catchAreaChange',
+                                    areaChosen: e.target.value,
                                 })}
-                        />
+                        >
+                            {areaOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </TextField>
                     </Grid>
-                    <Grid item xs={12}>
-                        <FormControlLabel
-                            control={<Checkbox
-                                checked={state.furnishedValue}
-                                onChange={(e) =>
-                                    dispatch({
-                                        type: 'catchFurnishedChange',
-                                        furnishedChosen: e.target.checked,
-                                    })} />}
-                            label="Furnished" />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <FormControlLabel
-                            control={<Checkbox
-                                checked={state.poolValue}
-                                onChange={(e) =>
-                                    dispatch({
-                                        type: 'catchPoolChange',
-                                        poolChosen: e.target.checked,
-                                    })} />}
-                            label="Pool" />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <FormControlLabel
-                            control={<Checkbox
-                                checked={state.elevatorValue}
-                                onChange={(e) =>
-                                    dispatch({
-                                        type: 'catchElevatorChange',
-                                        elevatorChosen: e.target.checked,
-                                    })} />}
-                            label="Elevator" />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <FormControlLabel
-                            control={<Checkbox
-                                checked={state.cctvValue}
-                                onChange={(e) =>
-                                    dispatch({
-                                        type: 'catchCctvChange',
-                                        cctvChosen: e.target.checked,
-                                    })} />}
-                            label="Cctv" />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <FormControlLabel
-                            control={<Checkbox
-                                checked={state.parkingValue}
-                                onChange={(e) =>
-                                    dispatch({
-                                        type: 'catchParkingChange',
-                                        parkingChosen: e.target.checked,
-                                    })} />}
-                            label="Parking" />
-                    </Grid>
-                    <Grid item container justifyContent="space-between">
-                        <Grid item xs={5}>
-                            <TextField
-                                id="area"
-                                label="Area"
-                                variant="standard"
-                                fullWidth
-                                select
-                                SelectProps={{
-                                    native: true,
-                                }}
-                                margin="dense"
-                                value={state.areaValue}
-                                onChange={(e) =>
-                                    dispatch({
-                                        type: 'catchAreaChange',
-                                        areaChosen: e.target.value,
-                                    })}
-                            >
-                                {areaOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </TextField>
-                        </Grid>
-                        <Grid item xs={5}>
-                            <TextField
-                                id="borough"
-                                label="Borough"
-                                variant="standard"
-                                fullWidth
-                                select
-                                SelectProps={{
-                                    native: true,
-                                }}
-                                margin="dense"
-                                value={state.boroughValue}
-                                onChange={(e) =>
-                                    dispatch({
-                                        type: 'catchBoroughChange',
-                                        boroughChosen: e.target.value,
-                                    })}
-                            >
-                                {state.areaValue === 'Inner London' ? innerLondonOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                )) : ''}
-                                {state.areaValue === 'Outter London' ? outterLondonOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                )) : ''}
-                            </TextField>
-                        </Grid>
+                    <Grid item xs={12} md={6}>
+                        <TextField
+                            id="borough"
+                            label="Borough*"
+                            variant="standard"
+                            fullWidth
+                            select
+                            SelectProps={{
+                                native: true,
+                            }}
+                            margin="dense"
+                            value={state.boroughValue}
+                            onChange={(e) =>
+                                dispatch({
+                                    type: 'catchBoroughChange',
+                                    boroughChosen: e.target.value,
+                                })}
+                        >
+                            {state.areaValue === 'Inner London' ? innerLondonOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            )) : ''}
+                            {state.areaValue === 'Outter London' ? outterLondonOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            )) : ''}
+                        </TextField>
                     </Grid>
 
                     <Grid item xs={12} sx={{ height: "35rem" }}>
@@ -929,10 +1173,32 @@ function AddProperty() {
                         </MapContainer>
                     </Grid>
 
-                    <Grid item xs={2}></Grid>
-                    <Grid item xs={8}>
-                        <Button variant="contained" color="success" fullWidth type="submit">SUBMIT</Button>
+                    <Grid item xs={3}></Grid>
+                    <Grid item xs={6}>
+                        <Button variant="contained" fullWidth component="label">
+                            UPLOAD PICTURES (MAX 5)
+                            <input
+                                type="file"
+                                multiple
+                                accept="image/png, image/gif, image/jpeg"
+                                hidden
+                                onChange={(e) => dispatch({ type: 'catchUploadedPictures', picturesChosen: e.target.files })} />
+                        </Button>
                     </Grid>
+                    <Grid item xs={3}></Grid>
+
+                    <Grid item xs={12}>
+                        <ul>
+                            {state.picture1Value ? <li>{state.picture1Value.name}</li> : ''}
+                            {state.picture2Value ? <li>{state.picture2Value.name}</li> : ''}
+                            {state.picture3Value ? <li>{state.picture3Value.name}</li> : ''}
+                            {state.picture4Value ? <li>{state.picture4Value.name}</li> : ''}
+                            {state.picture5Value ? <li>{state.picture5Value.name}</li> : ''}
+                        </ul>
+                    </Grid>
+
+                    <Grid item xs={2}></Grid>
+                    {SubmitButtonDisplay()}
                     <Grid item xs={2}></Grid>
                 </Grid>
             </Box>
