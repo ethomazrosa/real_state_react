@@ -13,6 +13,7 @@ import AddProperty from './components/AddProperty'
 import Profile from './components/Profile'
 import Agencies from './components/Agencies'
 import AgencyDetail from './components/AgencyDetail'
+import ListingDetail from './components/ListingDetail'
 
 // Contexts
 import DispatchContext from './contexts/DispatchContext'
@@ -77,6 +78,7 @@ function App() {
             <Route path='agencies/' element={<Agencies />} />
             <Route path='agencies/:id' element={<AgencyDetail />} />
             <Route path='listings/' element={<Listings />} />
+            <Route path='listings/:id' element={<ListingDetail />} />
           </Routes>
         </BrowserRouter>
       </DispatchContext.Provider>

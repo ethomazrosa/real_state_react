@@ -877,7 +877,7 @@ function AddProperty() {
                 formData.append("seller", GlobalState.userId)
                 try {
                     const response = await Axios.post(
-                        'http://127.0.0.1:8000/api/listings/create',
+                        'http://127.0.0.1:8000/api/listings/create/',
                         formData
                     )
                     navigate('/listings')
