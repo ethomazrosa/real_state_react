@@ -900,6 +900,7 @@ function AddProperty() {
                         <TextField
                             id="title"
                             label="Title*"
+                            required
                             variant="standard"
                             fullWidth
                             margin="dense"
@@ -915,6 +916,7 @@ function AddProperty() {
                         <TextField
                             id="listingType"
                             label="Listing Type*"
+                            required
                             variant="standard"
                             fullWidth
                             select
@@ -940,6 +942,7 @@ function AddProperty() {
                         <TextField
                             id="propertyStatus"
                             label="Property Status*"
+                            required
                             variant="standard"
                             fullWidth
                             margin="dense"
@@ -992,6 +995,7 @@ function AddProperty() {
                             id="price"
                             type="number"
                             label={PriceDisplay()}
+                            required
                             variant="standard"
                             fullWidth
                             margin="dense"

@@ -7,7 +7,7 @@ import { useImmerReducer } from 'use-immer'
 import DispatchContext from '../contexts/DispatchContext'
 
 //  MUI
-import { Box, TextField, Grid, Card, Typography, Button } from '@mui/material';
+import { Box, TextField, Grid, Card, Typography, Button, Snackbar, Alert } from '@mui/material';
 
 
 function Login() {
@@ -17,15 +17,20 @@ function Login() {
     passwordValue: '',
     sendRequest: 0,
     token: '',
+    openSnack: false,
+    disabledButton: false,
+    serverError: false,
   }
 
   function ReducerFunction(draft, action) {
     switch (action.type) {
       case 'catchUsernameChange':
         draft.usernameValue = action.usernameChosen
+        draft.serverError = false
         break
       case 'catchPasswordChange':
         draft.passwordValue = action.passwordChosen
+        draft.serverError = false
         break
       case 'changeSendRequest':
         draft.sendRequest = draft.sendRequest + 1
@@ -33,6 +38,17 @@ function Login() {
       case 'catchToken':
         draft.token = action.tokenValue
         break
+      case 'openTheSnack':
+        draft.openSnack = true
+        break
+      case 'disableTheButton':
+        draft.disabledButton = true
+        break
+      case 'allowTheButton':
+        draft.disabledButton = false
+        break
+      case 'catchServerError':
+        draft.serverError = true
       default:
         break
     }
@@ -45,6 +61,7 @@ function Login() {
   function FormSubmit(e) {
     e.preventDefault()
     dispatch({ type: 'changeSendRequest' })
+    dispatch({ type: 'disableTheButton' })
   }
 
   useEffect(() => {
@@ -59,10 +76,11 @@ function Login() {
               password: state.passwordValue,
             },
             { cancelToken: source.token })
-            dispatch({ type: 'catchToken', tokenValue: response.data.auth_token, })
-            GlobalDispatch({ type: 'catchToken', tokenValue: response.data.auth_token, })
+          dispatch({ type: 'catchToken', tokenValue: response.data.auth_token, })
+          GlobalDispatch({ type: 'catchToken', tokenValue: response.data.auth_token, })
         } catch (error) {
-          console.log(error.response)
+          dispatch({ type: 'allowTheButton' })
+          dispatch({ type: 'catchServerError' })
         }
       }
 
@@ -90,9 +108,9 @@ function Login() {
             emailInfo: response.data.email,
             idInfo: response.data.id
           })
-          navigate('/')
+          dispatch({ type: 'openTheSnack' })
         } catch (error) {
-          console.log(error.response)
+          dispatch({ type: 'allowTheButton' })
         }
       }
 
@@ -103,6 +121,12 @@ function Login() {
     }
   }, [state.token])
 
+  useEffect(() => {
+    if (state.openSnack) {
+      setTimeout(() => { navigate('/') }, 1500)
+    }
+  }, [state.openSnack])
+
   return (
     <div>
       <Card elevation={10} sx={{ width: '50%', marginLeft: 'auto', marginRight: 'auto', marginTop: '3rem', padding: '2rem' }}>
@@ -111,6 +135,11 @@ function Login() {
             <Grid item xs={12}>
               <Typography variant="h4" sx={{ textAlign: 'center' }}>SIGN IN</Typography>
             </Grid>
+
+            {state.serverError ? (
+              <Alert severity="error">Incorrect username or password</Alert>
+            ) : ''}
+
             <Grid item xs={12}>
               <TextField
                 id="username"
@@ -119,7 +148,9 @@ function Login() {
                 fullWidth
                 margin="dense"
                 value={state.usernameValue}
-                onChange={(e) => dispatch({ type: 'catchUsernameChange', usernameChosen: e.target.value })} />
+                onChange={(e) => dispatch({ type: 'catchUsernameChange', usernameChosen: e.target.value })}
+                error={state.serverError}
+              />
             </Grid>
             <Grid item xs={12}>
               <TextField
@@ -130,11 +161,13 @@ function Login() {
                 fullWidth
                 margin="dense"
                 value={state.passwordValue}
-                onChange={(e) => dispatch({ type: 'catchPasswordChange', passwordChosen: e.target.value })} />
+                onChange={(e) => dispatch({ type: 'catchPasswordChange', passwordChosen: e.target.value })}
+                error={state.serverError}
+              />
             </Grid>
             <Grid item xs={2}></Grid>
             <Grid item xs={8}>
-              <Button variant="contained" color="success" fullWidth type="submit">SIGN IN</Button>
+              <Button variant="contained" color="success" fullWidth type="submit" disabled={state.disabledButton}>SIGN IN</Button>
             </Grid>
             <Grid item xs={2}></Grid>
           </Grid>
@@ -144,6 +177,11 @@ function Login() {
             <span onClick={() => navigate('/register')} style={{ cursor: 'pointer', color: 'green' }}>SIGN UP</span></Typography>
         </Grid>
       </Card>
+      <Snackbar
+        open={state.openSnack}
+        message='You have succesfully logged in'
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
     </div>
   )
 }
